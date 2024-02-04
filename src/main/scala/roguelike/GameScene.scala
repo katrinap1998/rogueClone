@@ -26,7 +26,7 @@ object GameScene extends Scene[Unit, Model, Unit]:
   val subSystems: Set[SubSystem] =
     Set()
 
-  def updateModel(context: FrameContext[Unit], model: Model): GlobalEvent => Outcome[Model] =
+  def updateModel(context: indigo.scenes.SceneContext[Unit], model: roguelike.GameScene.SceneModel): indigo.shared.events.GlobalEvent => indigo.shared.Outcome[roguelike.GameScene.SceneModel] =
     case KeyboardEvent.KeyUp(Key.UP_ARROW) =>
       Outcome(model.copy(player = model.player.moveUp))
 
@@ -43,20 +43,26 @@ object GameScene extends Scene[Unit, Model, Unit]:
       Outcome(model)
 
   def updateViewModel(
-      context: FrameContext[Unit],
-      model: Model,
-      viewModel: Unit
-  ): GlobalEvent => Outcome[Unit] =
-    _ => Outcome(viewModel)
+      context: indigo.scenes.SceneContext[Unit],
+      model: roguelike.GameScene.SceneModel,
+      viewModel: roguelike.GameScene.SceneViewModel): indigo.shared.events.GlobalEvent => indigo.shared.Outcome[roguelike.GameScene.SceneViewModel] =
+      _ => Outcome(viewModel)
 
   val terminal: TerminalEmulator =
     TerminalEmulator(RogueLikeGame.screenSize)
 
-  def present(context: FrameContext[Unit], model: Model, viewModel: Unit): Outcome[SceneUpdateFragment] =
+  def present(context: indigo.scenes.SceneContext[Unit], model: roguelike.GameScene.SceneModel, viewModel: roguelike.GameScene.SceneViewModel): indigo.shared.Outcome[indigo.shared.scenegraph.SceneUpdateFragment] =
     Outcome(
       SceneUpdateFragment(
-        terminal
-          .put(model.player.position, Tile.`@`)
-          .draw(Assets.tileMap, RogueLikeGame.charSize, MapTile(Tile.SPACE), 4000)
+        Layer(
+          BindingKey("game"),
+          TextBox("No level", 100, 30)
+            .withColor(RGBA.White)
+            .withFontFamily(FontFamily.monospace)
+        )
+//        terminal
+//          .put(model.player.position, Tile.`@`)
+//          .put(RogueLikeGame.charSize, MapTile(Tile.SPACE), 4000)
+//          .draw(Assets.tileMap, RogueLikeGame.charSize, MapTile(Tile.SPACE), 4000)
       )
     )
