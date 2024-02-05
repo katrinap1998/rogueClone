@@ -1,11 +1,19 @@
-import scala.sys.process._
+import scala.sys.process.*
 import scala.language.postfixOps
+import indigoplugin.{IndigoOptions, *}
+import sbtindigo.SbtIndigo.autoImport.indigoOptions
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 lazy val roguelike =
   (project in file("."))
     .enablePlugins(ScalaJSPlugin, SbtIndigo)
+    .settings(
+      indigoOptions :=
+        IndigoOptions.defaults
+          .withTitle("Roguelike")
+          .withWindowSize(720, 480),
+    )
     .settings(
       name         := "roguelike",
       version      := "0.0.1",
@@ -15,11 +23,11 @@ lazy val roguelike =
         "org.scalameta" %%% "munit" % "0.7.29" % Test
       ),
       testFrameworks += new TestFramework("munit.Framework"),
-      showCursor          := true,
-      title               := "Indigo Roguelike!",
-      gameAssetsDirectory := "assets",
-      windowStartWidth    := 80 * 10,
-      windowStartHeight   := 50 * 10,
+//      showCursor          := true,
+//      title               := "Indigo Roguelike!",
+//      gameAssetsDirectory := "assets",
+//      windowStartWidth    := 80 * 10,
+//      windowStartHeight   := 50 * 10,
       libraryDependencies ++= Seq(
         "io.indigoengine" %%% "indigo-json-circe"    % "0.16.0",
         "io.indigoengine" %%% "indigo"               % "0.16.0",
@@ -31,6 +39,7 @@ lazy val roguelike =
     .settings(
       code := { "code ." ! }
     )
+
 
 // To use indigoBuild or indigoRun, first comment out the line above that says: `scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }`
 addCommandAlias("runGame", ";compile;fastOptJS;indigoRun")
