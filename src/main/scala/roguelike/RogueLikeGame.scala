@@ -5,28 +5,21 @@ import indigo.scenes.*
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 import roguelike.model.Model
-import roguelikestarterkit.TerminalText
-import roguelikestarterkit.tiles.RoguelikeTiles
 
 @JSExportTopLevel("IndigoGame")
-object RogueLikeGame extends IndigoSandbox[Size, Model]:
+object RogueLikeGame extends IndigoSandbox[Unit, Model]:
 
-  val screenSize: Size = Size(80, 50)
-  val charSize: Size = Size(10, 10)
+  val screenSize: Size = Size(450, 450)
 
-  def animations: Set[indigo.Animation] = ???
-  def assets: Set[indigo.AssetType] = ???
-  def initialScene(bootData: Unit): Option[SceneName] =
-    None
-  def config: indigo.GameConfig = ???
-  def fonts: Set[indigo.FontInfo] = ???
+  val assetName = AssetName("dots")
+  def animations: Set[Animation] = Set()
+  def assets: Set[AssetType] = Set(AssetType.Image(assetName, AssetPath("assets/dots.png")))
+  def initialScene(bootData: Unit): Option[SceneName] = None
+  def config: GameConfig = GameConfig.default.withViewport(GameViewport(450, 450))
+  def fonts: Set[FontInfo] = Set()
 
-  def initialModel(startupData: indigo.Size): indigo.shared.Outcome[roguelike.model.Model] = ???
-
-  def present(context: indigo.shared.FrameContext[indigo.Size], model:roguelike.model.Model):
-  indigo.shared.Outcome[indigo.SceneUpdateFragment] = ???
-  def setup(assetCollection: indigo.AssetCollection, dice: indigo.Dice):indigo.shared.Outcome[indigo.shared.Startup[indigo.Size]] = ???
-  def shaders: Set[indigo.Shader] = ???
+  def setup(assetCollection: AssetCollection, dice: indigo.Dice): Outcome[Startup[Unit]] = Outcome(Startup.Success(()))
+  def shaders: Set[indigo.Shader] = Set()
   
   def scenes(bootData: Unit): NonEmptyList[Scene[Unit, Model, Unit]] =
     NonEmptyList(GameScene)
@@ -34,36 +27,23 @@ object RogueLikeGame extends IndigoSandbox[Size, Model]:
   val eventFilters: EventFilters =
     EventFilters.Permissive
 
-  def boot(flags: Map[String, String]): Outcome[BootResult[Unit]] =
-    Outcome(
-      BootResult
-        .noData(
-          GameConfig.default
-            .withMagnification(1)
-            .withFrameRateLimit(30)
-            .withViewport(screenSize.width * charSize.width, screenSize.height * charSize.height)
-        )
-        .withFonts(RoguelikeTiles.Size10x10.Fonts.fontInfo)
-        .withAssets(Assets.assets)
-        .withShaders(
-          TerminalText.standardShader
-        )
-    )
-
   def initialModel(startupData: Unit): Outcome[Model] =
     Outcome(Model.initial(screenSize))
 
-  def initialViewModel(startupData: Unit, model: Model): Outcome[Unit] =
-    Outcome(())
+  def updateModel(context: FrameContext[Unit], model: Model): GlobalEvent => Outcome[Model] = {
+    case KeyboardEvent.KeyUp(Key.UP_ARROW) => Outcome(model.copy(player = model.player.moveUp))
+    case KeyboardEvent.KeyUp(Key.DOWN_ARROW) => Outcome(model.copy(player = model.player.moveDown))
+    case KeyboardEvent.KeyUp(Key.LEFT_ARROW) => Outcome(model.copy(player = model.player.moveLeft))
+    case KeyboardEvent.KeyUp(Key.RIGHT_ARROW) => Outcome(model.copy(player = model.player.moveRight))
+    case FrameTick => Outcome(model.copy(player = model.player.continue))
+    case _ => Outcome(model)
+  }
 
-  def setup(bootData: Unit, assetCollection: AssetCollection, dice: Dice): Outcome[Startup[Unit]] =
-    Outcome(Startup.Success(()))
-
-  def updateModel(context: FrameContext[Size], model: Model): GlobalEvent => Outcome[Model] =
-    _ => Outcome(model)
-
-  def updateViewModel(context: FrameContext[Unit], model: Model, viewModel: Unit): GlobalEvent => Outcome[Unit] =
-    _ => Outcome(viewModel)
-
-  def present(context: FrameContext[Unit], model: Model, viewModel: Unit): Outcome[SceneUpdateFragment] =
-    Outcome(SceneUpdateFragment.empty)
+  def present(context: FrameContext[Unit], model: Model): Outcome[SceneUpdateFragment] =
+    Outcome(
+      SceneUpdateFragment(
+        Graphic(
+          Rectangle(0, 0, 32, 32), 1, Material.Bitmap(RogueLikeGame.assetName)
+        ).withCrop(Rectangle(16, 0, 16, 16)).moveTo(model.player.position)
+      )
+    )

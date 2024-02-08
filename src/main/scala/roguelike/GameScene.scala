@@ -5,6 +5,7 @@ import indigo.scenes.*
 import roguelike.model.Model
 import roguelikestarterkit.{MapTile, Tile}
 import roguelikestarterkit.TerminalEmulator
+import roguelikestarterkit.tiles.Tile
 
 object GameScene extends Scene[Unit, Model, Unit]:
 
@@ -39,8 +40,9 @@ object GameScene extends Scene[Unit, Model, Unit]:
     case KeyboardEvent.KeyUp(Key.RIGHT_ARROW) =>
       Outcome(model.copy(player = model.player.moveRight))
 
-    case _ =>
-      Outcome(model)
+    
+
+    case _ => Outcome(model)
 
   def updateViewModel(
       context: indigo.scenes.SceneContext[Unit],
@@ -54,15 +56,8 @@ object GameScene extends Scene[Unit, Model, Unit]:
   def present(context: indigo.scenes.SceneContext[Unit], model: roguelike.GameScene.SceneModel, viewModel: roguelike.GameScene.SceneViewModel): indigo.shared.Outcome[indigo.shared.scenegraph.SceneUpdateFragment] =
     Outcome(
       SceneUpdateFragment(
-        Layer(
-          BindingKey("game"),
-          TextBox("No level", 100, 30)
-            .withColor(RGBA.White)
-            .withFontFamily(FontFamily.monospace)
-        )
-//        terminal
-//          .put(model.player.position, Tile.`@`)
-//          .put(RogueLikeGame.charSize, MapTile(Tile.SPACE), 4000)
-//          .draw(Assets.tileMap, RogueLikeGame.charSize, MapTile(Tile.SPACE), 4000)
+        Graphic(
+          Rectangle(0, 0, 32, 32), 1, Material.Bitmap(RogueLikeGame.assetName)
+        ).withCrop(Rectangle(0, 0, 16, 16)).moveTo(model.player.position)
       )
-    )
+      )
