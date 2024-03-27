@@ -4,6 +4,11 @@ import indigo.*
 import roguelike.model.Direction.{DOWN, LEFT, RIGHT, UP}
 
 final case class Model(screen: Size, player: Player)
+case class Fruit(position: Point)
+object Fruit {
+  def randomFruit(screenSize: Point): Fruit = ???
+}
+
 object Model:
   def initial(screenSize: Size): Model =
     Model(screenSize, Player.initial(screenSize))

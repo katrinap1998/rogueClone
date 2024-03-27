@@ -11,9 +11,9 @@ object RogueLikeGame extends IndigoSandbox[Unit, Model]:
 
   val screenSize: Size = Size(450, 450)
 
-  val assetName = AssetName("dots")
+  val assetName = AssetName("snake")
   def animations: Set[Animation] = Set()
-  def assets: Set[AssetType] = Set(AssetType.Image(assetName, AssetPath("assets/dots.png")))
+  def assets: Set[AssetType] = Set(AssetType.Image(assetName, AssetPath("assets/snake.png")))
   def initialScene(bootData: Unit): Option[SceneName] = None
   def config: GameConfig = GameConfig.default.withViewport(GameViewport(450, 450))
   def fonts: Set[FontInfo] = Set()
@@ -35,15 +35,30 @@ object RogueLikeGame extends IndigoSandbox[Unit, Model]:
     case KeyboardEvent.KeyUp(Key.DOWN_ARROW) => Outcome(model.copy(player = model.player.moveDown))
     case KeyboardEvent.KeyUp(Key.LEFT_ARROW) => Outcome(model.copy(player = model.player.moveLeft))
     case KeyboardEvent.KeyUp(Key.RIGHT_ARROW) => Outcome(model.copy(player = model.player.moveRight))
-    case FrameTick => Outcome(model.copy(player = model.player.continue))
+    case FrameTick => 
+      // If we introduce new aspects such as a wall or a fruit we must include it in the frame tick
+      // Scenario 1: If the player collides with the fruit update the model with new position of the fruit, otherwise fruit does not move
+      // Scenario 2:
+      Outcome(model.copy(player = model.player.continue))
+    
     case _ => Outcome(model)
   }
 
   def present(context: FrameContext[Unit], model: Model): Outcome[SceneUpdateFragment] =
+    val playerGraphic = Graphic(
+      Rectangle(0, 0, 12, 12), 2, Material.Bitmap(RogueLikeGame.assetName)
+    ).moveTo(model.player.position)
+
+    val fruitGraphic = Graphic(Rectangle(0, 0, 12, 12), 2, Material.Bitmap(assetName))
+      .withCrop(12, 0, 12, 12)
+      .moveTo(model.fruit.position)
+    
     Outcome(
       SceneUpdateFragment(
-        Graphic(
-          Rectangle(0, 0, 32, 32), 1, Material.Bitmap(RogueLikeGame.assetName)
-        ).withCrop(Rectangle(16, 0, 16, 16)).moveTo(model.player.position)
+//        Batch(playerGraphic) ++ Batch(fruitGraphic)
       )
     )
+
+    private val wallGraphic = Graphic(
+      Rectangle(0, 0, 32, 12), 1, Material.Bitmap(assetName))
+      .withCrop(Rectangle(0, 0, 12, 12))
