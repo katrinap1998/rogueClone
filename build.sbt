@@ -11,8 +11,8 @@ lazy val roguelike =
     .settings(
       indigoOptions :=
         IndigoOptions.defaults
-          .withTitle("Roguelike")
-          .withWindowSize(450, 450),
+          .withTitle("Snakey")
+          .withWindowSize(480, 480),
     )
     .settings(
       name         := "roguelike",

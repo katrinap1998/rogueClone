@@ -18,20 +18,26 @@ object Fruit {
   }
 }
 
+final case class PlayerContinueOutcome(player: Player, hasHitWall: Boolean)
+
 object Model:
+  val wallThickness = 12
+
   def initial(screenSize: Size): Model =
-    Model(screenSize, Player.initial(screenSize), Fruit.randomGenFruit(Point(screenSize.toPoint.x, screenSize.toPoint.y)))
+    Model(screenSize, Player.initial(screenSize, wallThickness), Fruit.randomGenFruit(Point(screenSize.toPoint.x, screenSize.toPoint.y)))
 
-final case class Player(screenSize: Size, position: Point, direction: Direction):
+final case class Player(screenSize: Size, wallThickness: Int, position: Point, direction: Direction):
   def moveUp: Player =
-    this.copy(position = newPositionModulo(position, Point(0, -2)), direction = UP)
+    this.copy(position = position + Point(0, -2), direction = UP)
   def moveDown: Player =
-    this.copy(position = newPositionModulo(position, Point(0, 2)), direction = DOWN)
+    this.copy(position = position + Point(0, 2), direction = DOWN)
   def moveLeft: Player =
-    this.copy(position = newPositionModulo(position, Point(-2, 0)), direction = LEFT)
+    this.copy(position = position + Point(-2, 0), direction = LEFT)
   def moveRight: Player =
-    this.copy(position = newPositionModulo(position, Point(2, 0)), direction = RIGHT)
+    this.copy(position = position + Point(2, 0), direction = RIGHT)
 
+  // modulo is no longer required as wall stops the snake
+  @Deprecated
   def newPositionModulo(currPos: Point, delta: Point): Point = {
     val newPos = currPos + delta
     // which of the new positions became negative?
@@ -44,18 +50,34 @@ final case class Player(screenSize: Size, position: Point, direction: Direction)
     }
   }
 
+  def continue: PlayerContinueOutcome = {
+    if (hasHitWall)
+      PlayerContinueOutcome(Player.initial(screenSize, Model.wallThickness), true)
+    else
+      this.direction match
+        case Direction.UP => PlayerContinueOutcome(moveUp, false)
+        case Direction.DOWN => PlayerContinueOutcome(moveDown, false)
+        case Direction.LEFT => PlayerContinueOutcome(moveLeft, false)
+        case Direction.RIGHT => PlayerContinueOutcome(moveRight, false)
+  }
 
-  def continue: Player =
-    this.direction match
-      case Direction.UP => moveUp
-      case Direction.DOWN => moveDown
-      case Direction.LEFT => moveLeft
-      case Direction.RIGHT => moveRight
+  private def hasHitWall: Boolean = {
+    val leftWallBarrierX = wallThickness
+    val topWallBarrierY  = wallThickness
+    // cannot tell why I need 2 * wallThickness :( but with just wallThickness player goes inside the wall
+    val rightWallBarrierX  = screenSize.toPoint.x - (2 * wallThickness)
+    val bottomWallBarrierY = screenSize.toPoint.y - (2 * wallThickness)
 
+    // check if the position of the player is at the walls
+    val playerOnWall = position.x <= leftWallBarrierX || position.y <= topWallBarrierY ||
+      position.x >= rightWallBarrierX || position.y >= bottomWallBarrierY
+
+    playerOnWall
+  }
 
 object Player:
-  def initial(screenSize: Size): Player =
-    Player(screenSize, screenSize.toPoint / 2, DOWN)
+  def initial(screenSize: Size, wallThickness: Int): Player =
+    Player(screenSize, wallThickness, screenSize.toPoint / 2, DOWN)
 
 enum Direction:
   case UP, DOWN, LEFT, RIGHT
