@@ -38,7 +38,7 @@ object RogueLikeGame extends IndigoSandbox[Unit, Model]:
     case FrameTick => 
       // If we introduce new aspects such as a wall or a fruit we must include it in the frame tick
       // Scenario 1: If the player collides with the fruit update the model with new position of the fruit, otherwise fruit does not move
-      // Scenario 2:
+      // Scenario 2: If the player hits the wall, then the game should reset
       Outcome(model.copy(player = model.player.continue))
     
     case _ => Outcome(model)
@@ -51,14 +51,17 @@ object RogueLikeGame extends IndigoSandbox[Unit, Model]:
 
     val fruitGraphic = Graphic(Rectangle(0, 0, 12, 12), 2, Material.Bitmap(assetName))
       .withCrop(12, 0, 12, 12)
-      .moveTo(model.fruit.position)
     
     Outcome(
       SceneUpdateFragment(
-//        Batch(playerGraphic) ++ Batch(fruitGraphic)
+        Batch(playerGraphic)
       )
     )
 
-    private val wallGraphic = Graphic(
-      Rectangle(0, 0, 32, 12), 1, Material.Bitmap(assetName))
-      .withCrop(Rectangle(0, 0, 12, 12))
+  private def drawWalls(screenSize: Size, brickSize: Int): Batch[Graphic[_]] = {
+    val brick = Graphic(
+      Rectangle(0, 0, 32, 12), 1, Material.Bitmap(assetName)
+    ).withCrop(Rectangle(0, 0, 12, 12))
+
+    Batch.empty
+  }
