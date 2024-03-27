@@ -4,16 +4,16 @@ import indigo.*
 import indigo.scenes.*
 
 import scala.scalajs.js.annotation.JSExportTopLevel
-import roguelike.model.Model
+import roguelike.model.{Fruit, Model}
 
 @JSExportTopLevel("IndigoGame")
 object RogueLikeGame extends IndigoSandbox[Unit, Model]:
 
   val screenSize: Size = Size(450, 450)
 
-  val assetName = AssetName("dots")
+  val assetName = AssetName("snake")
   def animations: Set[Animation] = Set()
-  def assets: Set[AssetType] = Set(AssetType.Image(assetName, AssetPath("assets/dots.png")))
+  def assets: Set[AssetType] = Set(AssetType.Image(assetName, AssetPath("assets/snake.png")))
   def initialScene(bootData: Unit): Option[SceneName] = None
   def config: GameConfig = GameConfig.default.withViewport(GameViewport(450, 450))
   def fonts: Set[FontInfo] = Set()
@@ -35,15 +35,30 @@ object RogueLikeGame extends IndigoSandbox[Unit, Model]:
     case KeyboardEvent.KeyUp(Key.DOWN_ARROW) => Outcome(model.copy(player = model.player.moveDown))
     case KeyboardEvent.KeyUp(Key.LEFT_ARROW) => Outcome(model.copy(player = model.player.moveLeft))
     case KeyboardEvent.KeyUp(Key.RIGHT_ARROW) => Outcome(model.copy(player = model.player.moveRight))
-    case FrameTick => Outcome(model.copy(player = model.player.continue))
+    case FrameTick =>
+      val modelCopy = model.copy(player = model.player.continue)
+      Outcome(updateFruitPosition(model.fruit.position, modelCopy))
     case _ => Outcome(model)
   }
 
+  private def updateFruitPosition(fruitPos: Point, model: Model): Model = {
+    if( Math.abs(model.player.position.y - fruitPos.y) <= 16 && Math.abs(model.player.position.x - fruitPos.x) <= 16) {
+      model.copy(fruit = Fruit.randomGenFruit(Point(screenSize.toPoint.x, screenSize.toPoint.y)))
+    }
+    else model
+  }
+
   def present(context: FrameContext[Unit], model: Model): Outcome[SceneUpdateFragment] =
+    val snakeGraphic = Graphic(
+      Rectangle(0, 0, 12, 12), 2, Material.Bitmap(RogueLikeGame.assetName)
+    ).moveTo(model.player.position)
+
+    val fruitGraphic = Graphic(Rectangle(0, 0, 12, 12), 2, Material.Bitmap(assetName))
+      .withCrop(12, 0, 12, 12)
+      .moveTo(model.fruit.position)
+
     Outcome(
       SceneUpdateFragment(
-        Graphic(
-          Rectangle(0, 0, 32, 32), 1, Material.Bitmap(RogueLikeGame.assetName)
-        ).withCrop(Rectangle(16, 0, 16, 16)).moveTo(model.player.position)
+        Batch(snakeGraphic) ++ Batch(fruitGraphic)
       )
     )

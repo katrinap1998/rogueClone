@@ -3,10 +3,24 @@ package roguelike.model
 import indigo.*
 import roguelike.model.Direction.{DOWN, LEFT, RIGHT, UP}
 
-final case class Model(screen: Size, player: Player)
+import scala.util.Random
+
+final case class Model(screen: Size, player: Player, fruit: Fruit)
+case class Fruit(position: Point)
+object Fruit {
+  def randomGenFruit(screenSize: Point): Fruit = {
+    val validPos = for {
+      x <- 0 until screenSize.x
+      y <- 0 until screenSize.y
+    } yield Point(x, y)
+    val randomPos = Random.nextInt(validPos.length)
+    Fruit(validPos(randomPos))
+  }
+}
+
 object Model:
   def initial(screenSize: Size): Model =
-    Model(screenSize, Player.initial(screenSize))
+    Model(screenSize, Player.initial(screenSize), Fruit.randomGenFruit(Point(screenSize.toPoint.x, screenSize.toPoint.y)))
 
 final case class Player(screenSize: Size, position: Point, direction: Direction):
   def moveUp: Player =
